@@ -7,6 +7,12 @@
                 "null"
             ]
         },
+        "disputed_amount": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
         "status": {
             "type": [
                 "string",
@@ -20,6 +26,24 @@
             ]
         },
         "case_no": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "case_type": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "cc_type": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "verdict": {
             "type": [
                 "string",
                 "null"
@@ -55,6 +79,18 @@
         "status_history": {
             "type": [
                 "array",
+                "null"
+            ]
+        },
+        "reference_number": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "reason_category": {
+            "type": [
+                "string",
                 "null"
             ]
         }
