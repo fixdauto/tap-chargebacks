@@ -1,0 +1,62 @@
+{
+    "properties": {
+        "id": {
+            "description": "The chargeback ID",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "status": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "order_id": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "case_no": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "date_due": {
+            "format": "date-time",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "date_post": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "date_trans": {
+            "format": "date-time",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "date_updated": {
+            "format": "date-time",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "status_history": {
+            "type": [
+                "array",
+                "null"
+            ]
+        }
+    }
+}

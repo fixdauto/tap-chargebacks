@@ -1,0 +1,111 @@
+{
+    "properties": {
+        "id": {
+            "description": "The alert ID",
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "type": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "amount": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "orderId": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "transId": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "isRefund": {
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "isDisputed": {
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "issuerName": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "reasonCode": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "outcome_name": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "received": {
+            "format": "date-time",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "transDate": {
+            "format": "date-time",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "authDate": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "dateCreated": {
+            "format": "date-time",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "dateUpdated": {
+            "format": "date-time",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "refundDate": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "outcomeDate": {
+            "type": [
+                "string",
+                "null"
+            ]
+        }
+    }
+}

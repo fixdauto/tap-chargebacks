@@ -2,181 +2,38 @@
 
 from pathlib import Path
 from typing import Any, Dict, Optional, Union, List, Iterable
+import typing as t
 
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
-from tap_chargebacks.client import chargebacksStream
-
 from memoization import cached
+import requests
 
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.streams import RESTStream
 
-from tap_chargebacks.auth import chargebacksAuthenticator
 
-# TODO: Delete this is if not using json files for schema definition
 SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
-
-
 
 class ChargebacksStream(RESTStream):
     """Define custom stream."""
-    name = "clients"
-    path = "/clients/FIXD_Automotive_Inc/chargebacks"
+    name = "chargebacks"
+    path = f"/clients/FIXD_Automotive_Inc/chargebacks"
     primary_keys = ["id"]
     replication_key = None
     url_base = "https://api.cbresponseservices.com/v2"
+    schema_filepath = SCHEMAS_DIR / "chargebacks.json"
 
-    # OR use a dynamic url_base:
-    # @property
-    # def url_base(self) -> str:
-    #     """Return the API URL root, configurable via tap settings."""
-    #     return self.config["api_url"]
-
-    records_jsonpath = "$.data[*]"  # Or override `parse_response`.
-    next_page_token_jsonpath = "$.next_page"  # Or override `get_next_page_token`.
-
-    # Optionally, you may also use `schema_filepath` in place of `schema`:
-    # schema_filepath = SCHEMAS_DIR / "users.json"
-    schema = th.PropertiesList(
-        th.Property("id", th.StringType),
-        th.Property("uid", th.StringType),
-        th.Property("order_id", th.StringType),
-        th.Property("order_api_generated", th.IntegerType),
-        th.Property("case_type", th.StringType),
-        th.Property("mid", th.StringType),
-        th.Property("mid_alias", th.StringType),
-        th.Property("platform_name", th.StringType),
-        th.Property("reason_code", th.StringType),
-        th.Property("reason_category", th.StringType),
-        th.Property("case_no", th.StringType),
-        th.Property("auth_no", th.StringType),
-        th.Property("arn", th.StringType),
-        th.Property("platform_id", th.IntegerType),
-        th.Property("crm_gateway_id", th.IntegerType),
-        th.Property("reference_number", th.IntegerType),
-        th.Property("bin", th.IntegerType),
-        th.Property("card_bin", th.StringType),
-        th.Property("last_four", th.IntegerType),
-        th.Property("card_last_four", th.StringType),
-        th.Property("cc_type", th.StringType),
-        th.Property("date_post", th.StringType),
-        th.Property("date_trans", th.StringType),
-        th.Property("date_due", th.StringType),
-        th.Property("dispute_amount", th.DoubleType),
-        th.Property("disputed_amount", th.StringType),
-        th.Property("fname", th.StringType),
-        th.Property("lname", th.StringType),
-        th.Property("ip_address", th.StringType),
-        th.Property("currency", th.StringType),
-        th.Property("status", th.StringType),
-        th.Property("date_updated", th.StringType),
-        th.Property("status_history", th.StringType),
-        th.Property("ip_address", th.StringType),
-        th.PropertyList(
-            th.Property("status",th.StringType),
-            th.Property("date",th.StringType),
-        ),
-    ).to_dict()
-
-    @property
-    # @cached
-    def authenticator(self) -> chargebacksAuthenticator:
-        """Return a new authenticator object."""
-        return chargebacksAuthenticator.create_for_stream(self)
+    records_jsonpath = "$[data][*]"
 
     @property
     def http_headers(self) -> dict:
         """Return the http headers needed."""
+        auth_url = "https://api.cbresponseservices.com/v2/auth"
+        response = requests.get(auth_url, auth = (self.config.get("user"), self.config.get("password")))
+        access_token = response.json()["data"]["accessToken"]
         headers = {}
-        if "Content-Type" in self.config:
-            headers["Content-Type"] = self.config.get("Content-Type")
-        return headers
-
-    def get_next_page_token(
-        self, response: requests.Response, previous_token: Optional[Any]
-    ) -> Optional[Any]:
-        """Return a token for identifying next page or None if no more pages."""
-        # TODO: If pagination is required, return a token which can be used to get the
-        #       next page. If this is the final page, return "None" to end the
-        #       pagination loop.
-        if self.next_page_token_jsonpath:
-            all_matches = extract_jsonpath(
-                self.next_page_token_jsonpath, response.json()
-            )
-            first_match = next(iter(all_matches), None)
-            next_page_token = first_match
-        else:
-            next_page_token = response.headers.get("X-Next-Page", None)
-
-        return next_page_token
-
-    def get_url_params(
-        self, context: Optional[dict], next_page_token: Optional[Any]
-    ) -> Dict[str, Any]:
-        """Return a dictionary of values to be used in URL parameterization."""
-        params: dict = {}
-        if next_page_token:
-            params["page"] = next_page_token
-        if self.replication_key:
-            params["sort"] = "asc"
-            params["order_by"] = self.replication_key
-        return params
-
-    def prepare_request_payload(
-        self, context: Optional[dict], next_page_token: Optional[Any]
-    ) -> Optional[dict]:
-        """Prepare the data payload for the REST API request.
-
-        By default, no payload will be sent (return None).
-        """
-        # TODO: Delete this method if no payload is required. (Most REST APIs.)
-        return None
-
-    def parse_response(self, response: requests.Response) -> Iterable[dict]:
-        """Parse the response and return an iterator of result rows."""
-        # TODO: Parse response body and return a set of records.
-        yield from extract_jsonpath(self.records_jsonpath, input=response.json())
-
-    def post_process(self, row: dict, context: Optional[dict]) -> dict:
-        """As needed, append or transform raw data to match expected structure."""
-        # TODO: Delete this method if not needed.
-        return row
-
-
-class GroupsStream(RESTStream):
-    """Define custom stream."""
-    name = "merchants"
-    path = "/merchants"
-    primary_keys = ["id"]
-    replication_key = "modified"
-    url_base = "https://api.cbresponseservices.com/v2"
-
-    # OR use a dynamic url_base:
-    # @property
-    # def url_base(self) -> str:
-    #     """Return the API URL root, configurable via tap settings."""
-    #     return self.config["api_url"]
-
-    records_jsonpath = "$[*]"  # Or override `parse_response`.
-    next_page_token_jsonpath = "$.next_page"  # Or override `get_next_page_token`.
-
-    schema = th.PropertiesList(
-        th.Property("name", th.StringType),
-        th.Property("id", th.StringType),
-        th.Property("modified", th.DateTimeType),
-    ).to_dict()
-
-    @property
-    @cached
-    def authenticator(self) -> chargebacksAuthenticator:
-        """Return a new authenticator object."""
-        return chargebacksAuthenticator.create_for_stream(self)
-
-    @property
-    def http_headers(self) -> dict:
-        """Return the http headers needed."""
-        headers = {}
+        headers["Authorization"] = f"Bearer {access_token}"
         if "user_agent" in self.config:
             headers["User-Agent"] = self.config.get("user_agent")
         return headers
@@ -185,19 +42,56 @@ class GroupsStream(RESTStream):
         self, response: requests.Response, previous_token: Optional[Any]
     ) -> Optional[Any]:
         """Return a token for identifying next page or None if no more pages."""
-        # TODO: If pagination is required, return a token which can be used to get the
-        #       next page. If this is the final page, return "None" to end the
-        #       pagination loop.
-        if self.next_page_token_jsonpath:
-            all_matches = extract_jsonpath(
-                self.next_page_token_jsonpath, response.json()
-            )
-            first_match = next(iter(all_matches), None)
-            next_page_token = first_match
-        else:
-            next_page_token = response.headers.get("X-Next-Page", None)
+        next_page_token = 1
+        while response.json()['data'] != []:
+            next_page_token += 1
+            return next_page_token
 
-        return next_page_token
+    def get_url_params(
+        self, context: Optional[dict], next_page_token: Optional[Any]
+    ) -> Dict[str, Any]:
+        """Return a dictionary of values to be used in URL parameterization."""
+        params: dict = {}
+        if next_page_token:
+            params["page"] = next_page_token
+        params["start_date"] = self.config.get("start_date")
+        if self.replication_key:
+            params["sort"] = "asc"
+            params["order_by"] = self.replication_key
+        return params
+
+class AlertsStream(RESTStream):
+    """Define custom stream."""
+    name = "alerts"
+    path = f"/clients/FIXD_Automotive_Inc/alerts"
+    primary_keys = ["id"]
+    replication_key = None
+    url_base = "https://api.cbresponseservices.com/v2"
+    schema_filepath = SCHEMAS_DIR / "alerts.json"
+
+    records_jsonpath = "$[data][*]"
+
+    @property
+    def http_headers(self) -> dict:
+        """Return the http headers needed."""
+        auth_url = "https://api.cbresponseservices.com/v2/auth"
+        response = requests.get(auth_url, auth = (self.config.get("user"), self.config.get("password")))
+        access_token = response.json()["data"]["accessToken"]
+        headers = {}
+        headers["Authorization"] = f"Bearer {access_token}"
+        if "user_agent" in self.config:
+            headers["User-Agent"] = self.config.get("user_agent")
+        return headers
+
+    def get_next_page_token(
+        self, response: requests.Response, previous_token: Optional[Any]
+    ) -> Optional[Any]:
+        """Return a token for identifying next page or None if no more pages."""
+        total_pages = response.json()['pagination']['total_pages']
+        current_page = response.json()['pagination']['current_page']
+        while current_page <= total_pages:
+            next_page_token = current_page + 1
+            return next_page_token
 
     def get_url_params(
         self, context: Optional[dict], next_page_token: Optional[Any]
@@ -210,23 +104,3 @@ class GroupsStream(RESTStream):
             params["sort"] = "asc"
             params["order_by"] = self.replication_key
         return params
-
-    def prepare_request_payload(
-        self, context: Optional[dict], next_page_token: Optional[Any]
-    ) -> Optional[dict]:
-        """Prepare the data payload for the REST API request.
-
-        By default, no payload will be sent (return None).
-        """
-        # TODO: Delete this method if no payload is required. (Most REST APIs.)
-        return None
-
-    def parse_response(self, response: requests.Response) -> Iterable[dict]:
-        """Parse the response and return an iterator of result rows."""
-        # TODO: Parse response body and return a set of records.
-        yield from extract_jsonpath(self.records_jsonpath, input=response.json())
-
-    def post_process(self, row: dict, context: Optional[dict]) -> dict:
-        """As needed, append or transform raw data to match expected structure."""
-        # TODO: Delete this method if not needed.
-        return row
