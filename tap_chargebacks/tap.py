@@ -37,13 +37,7 @@ class Tapchargebacks(Tap):
             "start_date",
             th.DateTimeType,
             description="The earliest record date to sync"
-        ),
-        th.Property(
-            "merchant_id",
-            th.StringType,
-            required=True,
-            description="The merchant ID to use for alert and chargeback calls."
-        ),
+        )
     ).to_dict()
 
     def discover_streams(self) -> List[Stream]:
