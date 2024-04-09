@@ -5,37 +5,33 @@ from typing import List
 from singer_sdk import Tap, Stream
 from singer_sdk import typing as th  # JSON schema typing helpers
 
-# TODO: Import your custom stream types here:
-from tap_chargebacks.streams import (
-    chargebacksStream,
-    UsersStream,
-    GroupsStream,
-)
-# TODO: Compile a list of custom stream types here
-#       OR rewrite discover_streams() below with your custom logic.
-STREAM_TYPES = [
-    UsersStream,
-    GroupsStream,
-]
 
+from tap_chargebacks.streams import (
+    ChargebacksStream,
+    AlertsStream,
+)
+
+STREAM_TYPES = [
+    AlertsStream,
+    ChargebacksStream,
+]
 
 class Tapchargebacks(Tap):
     """chargebacks tap class."""
     name = "tap-chargebacks"
 
-    # TODO: Update this section with the actual config values you expect:
     config_jsonschema = th.PropertiesList(
         th.Property(
-            "auth_token",
+            "user",
             th.StringType,
             required=True,
-            description="The token to authenticate against the API service"
+            description="The user for the Chargebacks API."
         ),
         th.Property(
-            "project_ids",
-            th.ArrayType(th.StringType),
+            "password",
+            th.StringType,
             required=True,
-            description="Project IDs to replicate"
+            description="The password for the Chargebacks API."
         ),
         th.Property(
             "start_date",
@@ -43,10 +39,10 @@ class Tapchargebacks(Tap):
             description="The earliest record date to sync"
         ),
         th.Property(
-            "api_url",
+            "merchant_id",
             th.StringType,
-            default="https://api.mysample.com",
-            description="The url for the API service"
+            required=True,
+            description="The merchant ID to use for alert and chargeback calls."
         ),
     ).to_dict()
 
