@@ -106,6 +106,12 @@
                 "string",
                 "null"
             ]
+        },
+        "transactionType": {
+            "type": [
+                "string",
+                "null"
+            ]
         }
     }
 }
